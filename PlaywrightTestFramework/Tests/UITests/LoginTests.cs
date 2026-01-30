@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Microsoft.Playwright;
 using PlaywrightTestFramework.Core;
 using PlaywrightTestFramework.PageObjects;
 using PlaywrightTestFramework.Config;
@@ -51,7 +50,7 @@ namespace PlaywrightTestFramework.Tests.UITests
             isErrorDisplayed.Should().BeTrue();
 
             var errorMessage = await _loginPage.GetErrorMessageAsync();
-            errorMessage.Should().Contain("Invalid login attempt");
+            errorMessage.Should().Contain("Invalid email or password.");
         }
     }
 }
