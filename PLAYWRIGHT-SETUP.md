@@ -1,48 +1,48 @@
-# Playwright Setup Guide  
-Requires .NET which you can download and install through this link: https://dotnet.microsoft.com/en-us/download
+# Playwright Setup Guide
 
 ## C#
 - Create solution in project folder
 ``` 
 dotnet new sln -n YourProjectName
 ```
-- Create test project and .csproj file using Nunit 
+- Create test project and .csproj file using Nunit
 ```
 dotnet new nunit -n YourProjectName
 dotnet sln add YourProjectName/YourProjectName.csproj
 ```
 - Install core dependencies
 ```
-# Playwright (version "1.57.0" as of Feb 2026)
+# Playwright
 dotnet add package Microsoft.Playwright
 dotnet add package Microsoft.Playwright.NUnit
 
-# Testing Framework (version "4.4.0" as of Feb 2026)
+# Testing Framework (choose one)
 dotnet add package NUnit
 dotnet add package NUnit3TestAdapter
 
-# Assertions & Utilities 
-dotnet add package FluentAssertions - (version "8.8.0" as of Feb 2026)
-dotnet add package Bogus  # For test data generation - (version "35.6.5" as of Feb 2026)
+# Assertions & Utilities
+dotnet add package FluentAssertions
+dotnet add package Bogus  # For test data generation
 
-# Configuration (version "10.0.2" as of Feb 2026)
+# Configuration
 dotnet add package Microsoft.Extensions.Configuration
 dotnet add package Microsoft.Extensions.Configuration.Json
 dotnet add package Microsoft.Extensions.Configuration.EnvironmentVariables 
+dotnet add package DotNetEnv 
 
-# Reporting (optional) (version "5.0.4" as of Feb 2026)
+# Reporting (optional)
 dotnet add package ExtentReports
 dotnet add package Allure.NUnit
 
-# Database (as needed) (version "" as of Feb 2026)
-dotnet add package Npgsql # connects to PostgreSQL databases - (version "10.0.1" as of Feb 2026)
-dotnet add package Microsoft.Data.SqlClient # connects to MSSQL databases - (version "6.1.4" as of Feb 2026)
-dotnet add package Dapper # helper layer for query simplifier - (version "2.1.66" as of Feb 2026)
+# Database (as needed)
+dotnet add package Npgsql # connects to PostgreSQL databases
+dotnet add package Microsoft.Data.SqlClient # connects to MSSQL databases
+dotnet add package Dapper # helper layer for query simplifier
 
-# Accessibility (version "4.11.0" as of Feb 2026)
+# Accessibility
 dotnet add package Deque.AxeCore.Playwright
 
-# API Testing (version "113.1.0" as of Feb 2026)
+# API Testing
 dotnet add package RestSharp
 # OR use Playwright's built-in APIRequestContext
 
@@ -54,7 +54,7 @@ dotnet build
 pwsh bin/Debug/net8.0/playwright.ps1 install
 ```
 
-## Project Structure 
+## Project Structure
 ```
 Be mindful of the namespaces
 YourProjectName/
@@ -89,15 +89,13 @@ YourProjectName/
 ├── TestData/
 │   ├── TestDataGenerator.cs
 │   └── TestUsers.json
-└── Reports/
-    └── (auto-generated)
+├── Reports/
+│    └── (auto-generated)
+└── .env
+
 ```
 
-## File 1 `Config/appsettings.json` file
-Make sure `BaseUrl` points to your app in test.  
-**Optional**: Make sure `ConnectionString` points to your database for data validation tests  
-**Optional**: Make sure `BaseApiUrl` points to the root of your app's API endpoints
-
+## File 1 `Config/appsettings.json` and `.env` file
 ```json
 {
   "TestSettings": {
@@ -110,7 +108,7 @@ Make sure `BaseUrl` points to your app in test.
     "TraceRecording": true
   },
   "DatabaseSettings": {
-    "ConnectionString": "Host=localhost;Database=testdb;Username=user;Password=pass"
+    "ConnectionString": "SET_VIA_ENV_VAR"
   },
   "ApiSettings": {
     "BaseApiUrl": "https://your-app.com/api",
@@ -119,7 +117,24 @@ Make sure `BaseUrl` points to your app in test.
 }
 ```
 
-## File 2 `Config/ConfigReader.cs` (read settings for all other classes)
+**Store sensitive information such as database username/passwords in the `.env` file. Naming convention is `Section__Key` (double underscore) and it must match the JSON structure from `appsettings.json`
+```env
+DATABASESETTINGS__CONNECTIONSTRING=Host=localhost;Database=testdb;Username=user;Password=pass
+```
+
+**Important**: make sure you add this lines of code to your `YourProjectName.csproj` file so .NET copies files to the output directory
+```xml
+<ItemGroup>
+    <None Update="Config\appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+```
+
+## File 2 `Congif/ConfigReader.cs` (read settings for all other classes)
 ```csharp
 using Microsoft.Extensions.Configuration;
 
@@ -135,10 +150,11 @@ namespace YourProjectName.Config
             {
                 if (_configuration == null)
                 {
+                    DotNetEnv.Env.Load(); // load appsettings.json values from the .env file
+
                     var builder = new ConfigurationBuilder()
                         .SetBasePath(Directory.GetCurrentDirectory())
                         .AddJsonFile("Config/appsettings.json", optional: false, reloadOnChange: true)
-                        .AddJsonFile($"Config/appsettings.{Environment.GetEnvironmentVariable("TEST_ENV") ?? "Development"}.json", optional: true)
                         .AddEnvironmentVariables();
                     
                     _configuration = builder.Build();
@@ -157,7 +173,7 @@ namespace YourProjectName.Config
 }
 ```
 
-## File 3 `Core/PlaywrightDriver.cs` [thread-safe singleton pattern](https://dev.to/devcorner/thread-safe-singleton-in-java-understanding-volatile-and-double-checked-locking-3d1a]thread-safe) that managers Playwright/Browser lifecycle
+## File 3 `Core/PlaywrightDriver.cs` (singleton pattern that manages Playwright/Browser lifecycle)
 ```csharp
 using Microsoft.Playwright;
 
@@ -165,67 +181,71 @@ namespace YourProjectName.Core
 {
     public class PlaywrightDriver
     {
-        private static readonly AsyncLocal<IPlaywright?> _playwright = new();
-        private static readonly AsyncLocal<IBrowser?> _browser = new();
-        private static readonly AsyncLocal<IBrowserContext?> _context = new();
-        private static readonly AsyncLocal<IPage?> _page = new();
+        private static IPlaywright? _playwright;
+        private static IBrowser? _browser;
+        private static IBrowserContext? _context;
+        private static IPage? _page;
 
-        public static IPlaywright? Playwright => _playwright.Value;
-        public static IBrowser? Browser => _browser.Value;
-        public static IBrowserContext? Context => _context.Value;
-        public static IPage? Page => _page.Value;
+        public static IPlaywright? Playwright => _playwright;
+        public static IBrowser? Browser => _browser;
+        public static IBrowserContext? Context => _context;
+        public static IPage? Page => _page;
 
         public static async Task InitializeAsync(string browserType = "chromium", bool headless = false)
         {
-            _playwright.Value = await Microsoft.Playwright.Playwright.CreateAsync();
+            _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
 
-            _browser.Value = browserType.ToLower() switch
+            _browser = browserType.ToLower() switch
             {
-                "chromium" => await _playwright.Value.Chromium.LaunchAsync(new() { Headless = headless }),
-                "firefox" => await _playwright.Value.Firefox.LaunchAsync(new() { Headless = headless }),
-                "webkit" => await _playwright.Value.Webkit.LaunchAsync(new() { Headless = headless }),
-                _ => await _playwright.Value.Chromium.LaunchAsync(new() { Headless = headless })
+                "chromium" => await _playwright.Chromium.LaunchAsync(new() { Headless = headless }),
+                "firefox" => await _playwright.Firefox.LaunchAsync(new() { Headless = headless }),
+                "webkit" => await _playwright.Webkit.LaunchAsync(new() { Headless = headless }),
+                _ => await _playwright.Chromium.LaunchAsync(new() { Headless = headless })
             };
 
-            _context.Value = await _browser.Value.NewContextAsync(new()
+            _context = await _browser.NewContextAsync(new()
             {
                 ViewportSize = new() { Width = 1920, Height = 1080 },
                 IgnoreHTTPSErrors = true,
                 RecordVideoDir = "Videos/",
-                // RecordTraceDir = "Traces/" // if needed
             });
 
             // Start tracing for debugging
-            await _context.Value.Tracing.StartAsync(new()
+            await _context.Tracing.StartAsync(new()
             {
                 Screenshots = true,
                 Snapshots = true,
                 Sources = true
             });
 
-            _page.Value = await _context.Value.NewPageAsync();
-            _page.Value.SetDefaultTimeout(Config.ConfigReader.Timeout);
+            _page = await _context.NewPageAsync();
+            _page.SetDefaultTimeout(Config.ConfigReader.Timeout);
         }
 
         public static async Task QuitAsync()
         {
-            if (_context.Value != null)
+            if (_context != null)
             {
-                await _context.Value.Tracing.StopAsync(new()
+                await _context.Tracing.StopAsync(new()
                 {
                     Path = $"Traces/trace-{DateTime.Now:yyyyMMdd-HHmmss}.zip"
                 });
             }
 
-            await _page.Value?.CloseAsync()!;
-            await _context.Value?.CloseAsync()!;
-            await _browser.Value?.CloseAsync()!;
-            _playwright.Value?.Dispose();
+            if (_page != null) await _page.CloseAsync();
+            if (_context != null) await _context.CloseAsync();
+            if (_browser != null) await _browser.CloseAsync();
+            _playwright?.Dispose();
+
+            _page = null;
+            _context = null;
+            _browser = null;
+            _playwright = null;
         }
 
         public static async Task<IPage> NewPageAsync()
         {
-            return await _context.Value!.NewPageAsync();
+            return await _context!.NewPageAsync();
         }
     }
 }
@@ -233,7 +253,7 @@ namespace YourProjectName.Core
 
 ## File 4 `Core/TestBase.cs` (base class for all UI tests)
 ```csharp
-using NUnit.Framework;
+using Microsoft.Playwright;
 using YourProjectName.Config;
 using YourProjectName.Utilities;
 
@@ -245,9 +265,8 @@ namespace YourProjectName.Core
         protected IPage Page => PlaywrightDriver.Page!;
 
         [OneTimeSetUp]
-        public async Task OneTimeSetup()
+        public void OneTimeSetup()
         {
-            // Initialize reporting
             ExtentReportHelper.InitializeReport();
         }
 
@@ -366,7 +385,7 @@ namespace YourProjectName.PageObjects
 }
 ```
 
-## File 6 `PageObjects/LoginPage.cs` (first concrete page example)
+## File 5 `PageObjects/LoginPage.cs` (first concrete page example)
 ```csharp
 using Microsoft.Playwright;
 
@@ -417,7 +436,7 @@ namespace YourProjectName.PageObjects
 
 ## Utilities: utilities to assist in different tasks such as database connectivity, screenshots on failure or APIs (build as needed)
 
-## Screenshot helper `Utilities/ScreenshotHelper.cs` 
+## Screenshot helper `Utilities/ScreenshotHelper.cs`
 ```csharp
 using Microsoft.Playwright;
 
@@ -484,7 +503,7 @@ namespace YourProjectName.Utilities
 
 ## API Helper `Utilities/APIHelper.cs`
 ```csharp
-using Microsoft.Playwright;
+uusing Microsoft.Playwright;
 
 namespace YourProjectName.Utilities
 {
@@ -534,7 +553,7 @@ namespace YourProjectName.Utilities
 using System.Diagnostics;
 using Microsoft.Playwright;
 
-namespace YourProjectName.Utilities
+namespace PlaywrightTestFramework.Utilities
 {
     /// <summary>
     /// Provides reusable wait strategies for Playwright tests
@@ -1024,7 +1043,7 @@ using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
 using AventStack.ExtentReports.Reporter.Config;
 
-namespace YourProjectName.Utilities
+namespace PlaywrightTestFramework.Utilities
 {
     /// <summary>
     /// Thread-safe ExtentReports helper for parallel test execution
@@ -1386,14 +1405,16 @@ namespace YourProjectName.Utilities
 }
 ```
 
-## Test Clases
-## Sample Login Tests `Tests/UITests/LoginTests.cs` 
+## Test Classes
+## Sample Login Tests `Tests/UITests/LoginTests.cs`
 ```csharp
 using FluentAssertions;
-using NUnit.Framework;
+using Microsoft.Playwright;
 using YourProjectName.Core;
 using YourProjectName.PageObjects;
 using YourProjectName.Config;
+using YourProjectName.TestData;
+using static Microsoft.Playwright.Assertions;
 
 namespace YourProjectName.Tests.UITests
 {
@@ -1403,9 +1424,10 @@ namespace YourProjectName.Tests.UITests
         private LoginPage? _loginPage;
 
         [SetUp]
-        public new async Task Setup()
+        public async Task TestSetup()
         {
-            await base.Setup();
+            // NUnit calls TestBase.Setup() automatically before this
+            await Task.CompletedTask;
             _loginPage = new LoginPage(Page);
         }
 
@@ -1414,14 +1436,14 @@ namespace YourProjectName.Tests.UITests
         public async Task ValidLogin_ShouldNavigateToHomePage()
         {
             // Arrange
+            var user = TestDataReader.GetValidUser("admin");
             await _loginPage!.NavigateToLoginAsync(ConfigReader.BaseUrl);
 
             // Act
-            await _loginPage.LoginAsync("admin@test.com", "Password123!");
+            await _loginPage.LoginAsync(user.Username, user.Password);
 
-            // Assert
-            await Page.WaitForURLAsync("**/Home/Index");
-            Page.Url.Should().Contain("/Home/Index");
+            // Assert - using Playwright's built-in assertions
+            await Expect(Page).ToHaveURLAsync(ConfigReader.BaseUrl);
         }
 
         [Test]
@@ -1429,15 +1451,16 @@ namespace YourProjectName.Tests.UITests
         public async Task InvalidLogin_ShouldDisplayErrorMessage()
         {
             // Arrange
+            var user = TestDataReader.GetInvalidUser("wrongPassword");
             await _loginPage!.NavigateToLoginAsync(ConfigReader.BaseUrl);
 
             // Act
-            await _loginPage.LoginAsync("invalid@test.com", "wrongpass");
+            await _loginPage.LoginAsync(user.Username, user.Password);
 
-            // Assert
+            // Assert - using FluentAssertions
             var isErrorDisplayed = await _loginPage.IsErrorDisplayedAsync();
             isErrorDisplayed.Should().BeTrue();
-            
+
             var errorMessage = await _loginPage.GetErrorMessageAsync();
             errorMessage.Should().Contain("Invalid login attempt");
         }
@@ -1445,7 +1468,7 @@ namespace YourProjectName.Tests.UITests
 }
 ```
 
-## Sample API Tests `Tests/APITests/APITestBase.cs` 
+## Sample API Tests `Tests/APITests/APITestBase.cs`
 ```csharp
 using NUnit.Framework;
 using YourProjectName.Core;
@@ -1492,13 +1515,11 @@ namespace YourProjectName.Tests.APITests
   "invalidUsers": {
     "wrongPassword": {
       "username": "admin@test.com",
-      "password": "WrongPassword123!",
-      "expectedError": "Invalid login attempt"
+      "password": "WrongPassword123!"
     },
     "nonExistentUser": {
       "username": "nonexistent@test.com",
-      "password": "Password@123!",
-      "expectedError": "Invalid login attempt"
+      "password": "Password@123!"
     }
   },
   "apiUsers": {
@@ -1681,7 +1702,7 @@ namespace YourProjectName.TestData
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
-        public UserPreferences? Preferences { get; set; } // Do I need this?
+        public UserPreferences? Preferences { get; set; }
     }
 
     public class InvalidTestUser

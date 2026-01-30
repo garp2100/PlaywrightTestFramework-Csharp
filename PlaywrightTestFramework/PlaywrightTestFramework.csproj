@@ -15,6 +15,7 @@
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Deque.AxeCore.Playwright" Version="4.11.0" />
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="ExtentReports" Version="5.0.4" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
@@ -36,16 +37,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include=".idea\.idea.PlaywrightTestFramework\.idea\.gitignore" />
-    <Content Include=".idea\.idea.PlaywrightTestFramework\.idea\encodings.xml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Reports\" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="TestData\TestUsers.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

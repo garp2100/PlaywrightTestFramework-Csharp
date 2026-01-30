@@ -2,11 +2,11 @@
   "validUsers": {
     "admin": {
       "username": "admin@test.com",
-      "password": "Admin@123!"
+      "password": "Admin123!"
     },
     "standardUser": {
-      "username": "john.doe@test.com",
-      "password": "User@123!"
+      "username": "user@test.com",
+      "password": "User123!"
     }
   },
   "invalidUsers": {

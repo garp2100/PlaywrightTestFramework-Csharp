@@ -1,8 +1,10 @@
 using FluentAssertions;
-using NUnit.Framework;
+using Microsoft.Playwright;
 using PlaywrightTestFramework.Core;
 using PlaywrightTestFramework.PageObjects;
 using PlaywrightTestFramework.Config;
+using PlaywrightTestFramework.TestData;
+using static Microsoft.Playwright.Assertions;
 
 namespace PlaywrightTestFramework.Tests.UITests
 {
@@ -12,9 +14,9 @@ namespace PlaywrightTestFramework.Tests.UITests
         private LoginPage? _loginPage;
 
         [SetUp]
-        public new async Task Setup()
+        public async Task TestSetup()
         {
-            await base.Setup();
+            await Task.CompletedTask; 
             _loginPage = new LoginPage(Page);
         }
 
@@ -23,14 +25,14 @@ namespace PlaywrightTestFramework.Tests.UITests
         public async Task ValidLogin_ShouldNavigateToHomePage()
         {
             // Arrange
+            var user = TestDataReader.GetValidUser("admin");
             await _loginPage!.NavigateToLoginAsync(ConfigReader.BaseUrl);
 
             // Act
-            await _loginPage.LoginAsync("admin@test.com", "Password123!");
+            await _loginPage.LoginAsync(user.Username, user.Password);
 
             // Assert
-            await Page.WaitForURLAsync("**/Home/Index");
-            Page.Url.Should().Contain("/Home/Index");
+            await Expect(Page).ToHaveURLAsync(ConfigReader.BaseUrl); 
         }
 
         [Test]
@@ -38,15 +40,16 @@ namespace PlaywrightTestFramework.Tests.UITests
         public async Task InvalidLogin_ShouldDisplayErrorMessage()
         {
             // Arrange
+            var user = TestDataReader.GetInvalidUser("wrongPassword");
             await _loginPage!.NavigateToLoginAsync(ConfigReader.BaseUrl);
 
             // Act
-            await _loginPage.LoginAsync("invalid@test.com", "wrongpass");
+            await _loginPage.LoginAsync(user.Username, user.Password);
 
             // Assert
             var isErrorDisplayed = await _loginPage.IsErrorDisplayedAsync();
             isErrorDisplayed.Should().BeTrue();
-            
+
             var errorMessage = await _loginPage.GetErrorMessageAsync();
             errorMessage.Should().Contain("Invalid login attempt");
         }

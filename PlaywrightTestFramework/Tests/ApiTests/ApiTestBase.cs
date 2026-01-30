@@ -1,20 +1,19 @@
-using NUnit.Framework;
 using PlaywrightTestFramework.Config;
 using PlaywrightTestFramework.Core;
 using PlaywrightTestFramework.Utilities;
 
-namespace PlaywrightTestFramework.Tests.APITests
+namespace PlaywrightTestFramework.Tests.ApiTests
 {
     [TestFixture]
-    public class APITestBase
+    public class ApiTestBase
     {
-        private APIHelper? _apiHelper;
+        private ApiHelper? _apiHelper;
 
         [OneTimeSetUp]
         public async Task OneTimeSetup()
         {
             await PlaywrightDriver.InitializeAsync();
-            _apiHelper = await APIHelper.CreateAsync(PlaywrightDriver.Playwright!, ConfigReader.BaseApiUrl);
+            _apiHelper = await ApiHelper.CreateAsync(PlaywrightDriver.Playwright!, ConfigReader.BaseApiUrl);
         }
 
         [OneTimeTearDown]

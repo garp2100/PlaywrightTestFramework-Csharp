@@ -1,5 +1,4 @@
 using Microsoft.Playwright;
-using NUnit.Framework;
 using PlaywrightTestFramework.Config;
 using PlaywrightTestFramework.Utilities;
 
@@ -11,9 +10,8 @@ namespace PlaywrightTestFramework.Core
         protected IPage Page => PlaywrightDriver.Page!;
 
         [OneTimeSetUp]
-        public async Task OneTimeSetup()
+        public void OneTimeSetup()
         {
-            // Initialize reporting
             ExtentReportHelper.InitializeReport();
         }
 

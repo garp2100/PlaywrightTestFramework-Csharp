@@ -32,6 +32,7 @@ project.fragment.lock.json
 .idea/**/shelf
 .idea/**/contentModel.xml
 .idea/**/modules.xml
+.idea/**/vcs.xml 
 *.iml
 
 # Test Results
@@ -47,3 +48,6 @@ test-results/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Environment Variables
+.env

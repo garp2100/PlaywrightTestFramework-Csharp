@@ -2,23 +2,23 @@ using Microsoft.Playwright;
 
 namespace PlaywrightTestFramework.Utilities
 {
-    public class APIHelper : IAsyncDisposable
+    public class ApiHelper : IAsyncDisposable
     {
         private readonly IAPIRequestContext _apiContext;
 
-        private APIHelper(IAPIRequestContext apiContext)
+        private ApiHelper(IAPIRequestContext apiContext)
         {
             _apiContext = apiContext;
         }
 
-        public static async Task<APIHelper> CreateAsync(IPlaywright playwright, string baseUrl)
+        public static async Task<ApiHelper> CreateAsync(IPlaywright playwright, string baseUrl)
         {
             var apiContext = await playwright.APIRequest.NewContextAsync(new()
             {
                 BaseURL = baseUrl,
                 IgnoreHTTPSErrors = true
             });
-            return new APIHelper(apiContext);
+            return new ApiHelper(apiContext);
         }
 
         public async Task<IAPIResponse> GetAsync(string endpoint, Dictionary<string, string>? headers = null)

@@ -33,7 +33,6 @@
 │   • InitializeAsync() → Creates Playwright → Browser → Context → Page   │
 │   • QuitAsync()       → Closes everything, saves trace files            │
 │                                                                         │
-│   Uses AsyncLocal<T> for thread-safety (parallel test execution)        │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 🔑 The Key Relationships
@@ -138,9 +137,9 @@ Why? → Common page actions (click, fill, wait) live in BasePage. Specific page
 
 > "Maintainability. When the login page UI changes, I update LoginPage.cs once—not every test that logs in."
 
-"Why AsyncLocal in PlaywrightDriver?"
+"Why static fields in PlaywrightDriver?"
 
-> "Thread safety for parallel execution. Each test thread gets its own browser instance without conflicts."
+> "Simplicity for sequential test execution. Each test gets a fresh browser instance via SetUp/TearDown. For parallel execution, consider using AsyncLocal<T> or test-scoped instances."
 
 "Why TestBase instead of putting setup in each test?"
 

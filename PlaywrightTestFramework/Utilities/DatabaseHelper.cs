@@ -2,7 +2,7 @@ using Dapper;
 using Npgsql;
 using PlaywrightTestFramework.Config;
 
-namespace PlaywrightFramework.Utilities
+namespace PlaywrightTestFramework.Utilities
 {
     public class DatabaseHelper
     {

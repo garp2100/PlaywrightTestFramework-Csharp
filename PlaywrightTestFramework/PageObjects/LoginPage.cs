@@ -13,10 +13,10 @@ namespace PlaywrightTestFramework.PageObjects
         // Constructor
         public LoginPage(IPage page) : base(page)
         {
-            _usernameInput = page.Locator("[data-automation-id='username']");
-            _passwordInput = page.Locator("[data-automation-id='password']");
-            _loginButton = page.Locator("[data-automation-id='login-button']");
-            _errorMessage = page.Locator("[data-automation-id='error-message']");
+            _usernameInput = page.Locator("[data-automation-id='email-input']");
+            _passwordInput = page.Locator("[data-automation-id='password-input']");
+            _loginButton = page.Locator("[data-automation-id='login-submit-btn']");
+            _errorMessage = page.Locator("[data-automation-id='login-validation-summary']");
         }
 
         // Page Actions

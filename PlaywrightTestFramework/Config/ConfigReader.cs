@@ -12,11 +12,12 @@ namespace PlaywrightTestFramework.Config
             {
                 if (_configuration == null)
                 {
+                    DotNetEnv.Env.Load();
+                    
                     var builder = new ConfigurationBuilder()
                         .SetBasePath(Directory.GetCurrentDirectory())
                         .AddJsonFile("Config/appsettings.json", optional: false, reloadOnChange: true)
-                        .AddJsonFile($"Config/appsettings.{Environment.GetEnvironmentVariable("TEST_ENV") ?? "Development"}.json", optional: true)
-                        .AddEnvironmentVariables(); //what's going on here
+                        .AddEnvironmentVariables(); 
                     
                     _configuration = builder.Build();
                 }

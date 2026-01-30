@@ -95,7 +95,7 @@ namespace PlaywrightTestFramework.TestData
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
-        public UserPreferences? Preferences { get; set; } // Do I need this?
+        public UserPreferences? Preferences { get; set; } 
     }
 
     public class InvalidTestUser
