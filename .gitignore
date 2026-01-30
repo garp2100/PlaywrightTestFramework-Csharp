@@ -1,0 +1,49 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# .NET
+*.dll
+*.exe
+*.pdb
+*.user
+*.userosscache
+*.suo
+*.cache
+*.log
+
+# NuGet
+packages/
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+
+# Visual Studio
+.vs/
+*.vspscc
+*.vssscc
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/contentModel.xml
+.idea/**/modules.xml
+*.iml
+
+# Test Results
+[Tt]est[Rr]esult*/
+TestResults/
+[Dd]ebug[Pp]ublic/
+coverage*/
+
+# Playwright
+playwright-report/
+test-results/
+
+# OS files
+.DS_Store
+Thumbs.db

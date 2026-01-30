@@ -1,0 +1,90 @@
+{
+  "validUsers": {
+    "admin": {
+      "username": "admin@test.com",
+      "password": "Admin@123!"
+    },
+    "standardUser": {
+      "username": "john.doe@test.com",
+      "password": "User@123!"
+    }
+  },
+  "invalidUsers": {
+    "wrongPassword": {
+      "username": "admin@test.com",
+      "password": "WrongPassword123!"
+    },
+    "nonExistentUser": {
+      "username": "nonexistent@test.com",
+      "password": "Password@123!"
+    }
+  },
+  "apiUsers": {
+    "apiAdmin": {
+      "username": "api.admin@test.com",
+      "password": "ApiAdmin@123!",
+      "apiKey": "test-api-key-admin-12345"
+    }
+  },
+  "accessibilityTestUsers": {
+    "screenReaderUser": {
+      "username": "screenreader@test.com",
+      "password": "Screen@123!",
+      "accessibilityProfile": "screen_reader",
+      "preferences": {
+        "highContrast": true,
+        "largeText": true,
+        "keyboardOnly": true
+      }
+    },
+    "keyboardNavigationUser": {
+      "username": "keyboard@test.com",
+      "password": "Keyboard@123!",
+      "accessibilityProfile": "keyboard_only",
+      "preferences": {
+        "skipToContent": true,
+        "focusIndicators": true
+      }
+    }
+  },
+  "dataSeeding": {
+    "bulkUsers": [
+      {
+        "username": "user001@test.com",
+        "password": "User@123!",
+        "firstName": "User",
+        "lastName": "001",
+        "role": "User"
+      },
+      {
+        "username": "user002@test.com",
+        "password": "User@123!",
+        "firstName": "User",
+        "lastName": "002",
+        "role": "User"
+      },
+      {
+        "username": "user003@test.com",
+        "password": "User@123!",
+        "firstName": "User",
+        "lastName": "003",
+        "role": "User"
+      }
+    ]
+  },
+  "testConfiguration": {
+    "defaultTimeout": 30000,
+    "retryAttempts": 3,
+    "passwordPolicy": {
+      "minLength": 8,
+      "requireUppercase": true,
+      "requireLowercase": true,
+      "requireDigit": true,
+      "requireSpecialChar": true
+    },
+    "lockoutPolicy": {
+      "maxFailedAttempts": 5,
+      "lockoutDurationMinutes": 30
+    }
+  }
+}
